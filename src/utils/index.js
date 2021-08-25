@@ -53,10 +53,10 @@ export const OrderShiftsByDate = shifts => {
       }
     });
 
-    const test = map(sectionsToShow, (section, key) => {
+    const formattedSections = map(sectionsToShow, (section, key) => {
       return {title: key, data: section};
     });
 
-    return test;
+    return formattedSections;
   }
 };

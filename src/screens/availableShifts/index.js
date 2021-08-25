@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {SafeAreaView} from 'react-native';
+import {SafeAreaView, Alert} from 'react-native';
 import {SectionListComponent} from '../../components';
 
 import {Variables} from '../../utils';
@@ -20,7 +20,17 @@ const AvailableShifts = ({navigation}) => {
         const shiftsResponse = await response.json();
         dispatch(loadShifts(shiftsResponse));
       } catch (error) {
-        console.error(error);
+        Alert.alert(
+          'An Error occurs',
+          'Please be sure to have the server up and running or try again',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+            {text: 'OK', onPress: () => getAvailableShiftsFromApi()},
+          ],
+        );
       }
     };
 
