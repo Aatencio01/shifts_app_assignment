@@ -14,7 +14,10 @@ const App = () => {
   return (
     <StoreProvider initialState={initialState} reducer={shiftsReducer}>
       <NavigationContainer>
-        <Tab.Navigator>
+        <Tab.Navigator
+          screenOptions={{
+            headerShown: false,
+          }}>
           <Tab.Screen
             name="MyShifts"
             component={MyShifts}
