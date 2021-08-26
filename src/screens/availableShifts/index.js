@@ -56,7 +56,7 @@ const AvailableShifts = ({navigation}) => {
               text: 'Cancel',
               style: 'cancel',
             },
-            {text: 'Try again', onPress: () => getShifts()},
+            {text: 'Retry now', onPress: () => getShifts()},
           ],
         );
       }
