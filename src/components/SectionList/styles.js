@@ -17,7 +17,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F8FB',
   },
   header: {
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
     height: 60,
     paddingHorizontal: 20,
     borderColor: '#CBD2E1',
@@ -29,10 +31,21 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#4F6C92',
   },
+  headerTitleSummary: {
+    marginLeft: 20,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#A4B8D3',
+  },
   itemTime: {
     fontSize: 16,
     fontWeight: '600',
     color: '#4F6C92',
+  },
+  areaName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#A4B8D3',
   },
   button: {
     alignItems: 'center',

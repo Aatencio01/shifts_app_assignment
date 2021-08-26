@@ -28,7 +28,7 @@ const sortedShifts = shifts => {
 };
 
 export const filterOutOfTime = shifts => {
-  return shifts.filter(shift => shift.startTime > Date.now());
+  return shifts.filter(shift => shift.endTime > Date.now());
 };
 
 export const groupShiftsByArea = shifts => {
@@ -85,39 +85,47 @@ export const getHoursAndMinutes = (startTimeValue, endTimeValue) => {
   return `${startTime}-${endTime}`;
 };
 
-export const getIsOverlapping = (shifts, shiftFromAction) => {
+export const getIsOverlapping = shifts => {
   let findOverLapping = [];
-  if (shiftFromAction) {
-    console.log('shiftFromAction ==', shiftFromAction);
-    findOverLapping = shifts.map(shift => {
-      shift.overlapping = false;
-      if (shiftFromAction.booked) {
-        if (
-          shiftFromAction.startTime < shift.endTime &&
-          shiftFromAction.endTime > shift.startTime &&
-          !shift.booked
-        ) {
-          shift.overlapping = true;
-        }
+  const filterByBooked = shifts.filter(shift => shift.booked);
+  findOverLapping = shifts.map(shift => {
+    shift.overlapping = false;
+    filterByBooked.forEach(filterShift => {
+      if (
+        filterShift.startTime < shift.endTime &&
+        filterShift.endTime > shift.startTime &&
+        !shift.booked
+      ) {
+        shift.overlapping = true;
       }
-      return shift;
     });
-  } else {
-    const filterByBooked = shifts.filter(shift => shift.booked);
-    findOverLapping = shifts.map(shift => {
-      shift.overlapping = false;
-      filterByBooked.forEach(filterShift => {
-        if (
-          filterShift.startTime < shift.endTime &&
-          filterShift.endTime > shift.startTime &&
-          !shift.booked
-        ) {
-          shift.overlapping = true;
-        }
-      });
-      return shift;
-    });
-  }
+    return shift;
+  });
 
   return findOverLapping;
+};
+
+/*
+ Example Section Data
+  section: {
+    title: "Today"
+    data: [
+      {
+        area: "Helsinki"
+        booked: true
+        endTime: 1630008000000
+        id: "e3158dae-3475-4dad-b42a-e66346bd1621"
+        overlapping: false
+      }
+    ]
+  }
+*/
+export const getTotalShiftsHours = section => {
+  let totalHours = 0;
+  section.data.forEach(shift => {
+    const diff = Math.abs(shift.startTime - shift.endTime);
+    const getDiffHours = diff / 1000 / 60 / 60;
+    totalHours += getDiffHours;
+  });
+  return totalHours;
 };

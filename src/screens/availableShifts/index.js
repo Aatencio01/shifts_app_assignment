@@ -1,36 +1,52 @@
 import React, {useEffect} from 'react';
 import {
   SafeAreaView,
-  Alert,
   FlatList,
   Text,
   View,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
+
+// Components
 import {SectionListComponent} from '../../components';
 
-import {Variables, groupShiftsByArea, filterOutOfTime} from '../../utils';
-
+// Store
 import {useStore} from '../../store';
 import {
+  setSelectedArea,
   loadShifts,
+  setShowLoading,
   bookShift,
   cancelShift,
-  setSelectedArea,
-} from '../../store/shifts';
+} from '../../store/shifts/actions';
 
+// Services
+import {
+  getAvailableShifts,
+  postBookingShift,
+  postCancelShift,
+} from '../../services/';
+
+// Utils
+import {
+  groupShiftsByArea,
+  filterOutOfTime,
+  groupShiftsByDate,
+} from '../../utils';
+
+// Styles
 import styles from './styles';
 
 const AvailableShifts = ({navigation}) => {
   const [state, dispatch] = useStore();
-  const {shifts, selectedArea} = state;
+  const {shifts, selectedArea, showLoading} = state;
 
   useEffect(() => {
-    const getAvailableShiftsFromApi = async () => {
+    async function getShifts() {
       try {
-        const response = await fetch(`${Variables.API_BASE_URL}/shifts`);
-        const shiftsResponse = await response.json();
-        dispatch(loadShifts(shiftsResponse));
+        const availableShifts = await getAvailableShifts();
+        dispatch(loadShifts(availableShifts));
       } catch {
         Alert.alert(
           'An Error occurs',
@@ -40,48 +56,31 @@ const AvailableShifts = ({navigation}) => {
               text: 'Cancel',
               style: 'cancel',
             },
-            {text: 'OK', onPress: () => getAvailableShiftsFromApi()},
+            {text: 'Try again', onPress: () => getShifts()},
           ],
         );
       }
-    };
-
-    getAvailableShiftsFromApi();
+    }
+    getShifts();
   }, [dispatch]);
 
-  const handleBook = async date => {
-    console.log('date ==', date);
+  const setShiftsByArea = item => {
+    dispatch(setSelectedArea(item.title));
+  };
+
+  const handleBooking = async date => {
     try {
+      dispatch(setShowLoading({isLoading: true, date}));
       if (date.booked) {
-        const cancelShiftResponse = await fetch(
-          `${Variables.API_BASE_URL}/shifts/${date.id}/cancel`,
-          {
-            method: 'POST',
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
-            },
-          },
-        );
-        const cancelResponse = await cancelShiftResponse.json();
-        console.log('cancelResponse ==', cancelResponse);
-        dispatch(cancelShift(cancelResponse));
+        const canceledShift = await postCancelShift(date);
+        dispatch(cancelShift(canceledShift));
       } else {
-        const bookShiftResponse = await fetch(
-          `${Variables.API_BASE_URL}/shifts/${date.id}/book`,
-          {
-            method: 'POST',
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
-            },
-          },
-        );
-        const bookResponse = await bookShiftResponse.json();
-        console.log('bookResponse ===', bookResponse);
-        dispatch(bookShift(bookResponse));
+        const bookedShift = await postBookingShift(date);
+        dispatch(bookShift(bookedShift));
       }
+      dispatch(setShowLoading({isLoading: false, date}));
     } catch {
+      dispatch(setShowLoading({isLoading: false, date: {}}));
       Alert.alert(
         'An Error occurs',
         'Please be sure to have the server up and running or try again',
@@ -94,10 +93,6 @@ const AvailableShifts = ({navigation}) => {
         ],
       );
     }
-  };
-
-  const setShiftsByArea = item => {
-    dispatch(setSelectedArea(item.title));
   };
 
   const Item = ({item, fontColor, itemsQuantity}) => (
@@ -127,10 +122,13 @@ const AvailableShifts = ({navigation}) => {
     );
   };
 
+  const formattedShifts = groupShiftsByDate(
+    shifts.filter(shift => shift.area === selectedArea),
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View>
-        {console.log('selectedArea ===', selectedArea)}
         <FlatList
           data={groupShiftsByArea(shifts)}
           horizontal={true}
@@ -141,9 +139,9 @@ const AvailableShifts = ({navigation}) => {
         />
       </View>
       <SectionListComponent
-        shifts={shifts}
-        selectedArea={selectedArea}
-        onPress={handleBook}
+        shifts={formattedShifts}
+        onPress={handleBooking}
+        showLoading={showLoading}
       />
     </SafeAreaView>
   );

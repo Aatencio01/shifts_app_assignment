@@ -1,37 +1,14 @@
+import get from 'lodash/get';
 import {SHIFTS_ACTIONS} from './types';
-import {getIsOverlapping} from '../../utils';
+import {getIsOverlapping, groupShiftsByArea} from '../../utils';
 
 export const initialState = {
   shifts: [],
   selectedArea: '',
-};
-
-export const loadShifts = shifs => {
-  return {
-    type: SHIFTS_ACTIONS.LOAD_SHIFTS,
-    payload: shifs,
-  };
-};
-
-export const bookShift = shif => {
-  return {
-    type: SHIFTS_ACTIONS.BOOK_SHIFT,
-    payload: shif,
-  };
-};
-
-export const cancelShift = shif => {
-  return {
-    type: SHIFTS_ACTIONS.CANCEL_SHIFT,
-    payload: shif,
-  };
-};
-
-export const setSelectedArea = area => {
-  return {
-    type: SHIFTS_ACTIONS.SELECTED_AREA,
-    payload: area,
-  };
+  showLoading: {
+    isLoading: false,
+    date: {},
+  },
 };
 
 const updateShifts = (shifts, action) => {
@@ -43,7 +20,7 @@ const updateShifts = (shifts, action) => {
       return shift;
     });
 
-    return getIsOverlapping(updatedShifts, action.payload);
+    return getIsOverlapping(updatedShifts);
   }
   return getIsOverlapping(shifts);
 };
@@ -51,9 +28,15 @@ const updateShifts = (shifts, action) => {
 export const shiftsReducer = (state = initialState, action) => {
   switch (action.type) {
     case SHIFTS_ACTIONS.LOAD_SHIFTS: {
+      const getInitialArea = get(
+        groupShiftsByArea(action.payload),
+        '[0].title',
+        '',
+      );
       return {
         ...state,
         shifts: updateShifts(action.payload),
+        selectedArea: getInitialArea,
       };
     }
     case SHIFTS_ACTIONS.BOOK_SHIFT: {
@@ -68,10 +51,16 @@ export const shiftsReducer = (state = initialState, action) => {
         shifts: updateShifts(state.shifts, action),
       };
     }
-    case SHIFTS_ACTIONS.SELECTED_AREA: {
+    case SHIFTS_ACTIONS.SELECT_AREA: {
       return {
         ...state,
         selectedArea: action.payload,
+      };
+    }
+    case SHIFTS_ACTIONS.SHOW_LOADING: {
+      return {
+        ...state,
+        showLoading: action.payload,
       };
     }
     default: {
